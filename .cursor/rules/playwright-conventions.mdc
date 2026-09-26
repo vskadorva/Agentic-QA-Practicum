@@ -1,0 +1,291 @@
+---
+description: How this project writes Playwright tests — locators, waiting, POM, auth, data, API, mocking, accessibility, assertions, and anti-flake. Apply to all test work under tests/.
+globs: tests/**
+alwaysApply: false
+---
+
+# Playwright conventions
+
+Illustrative UI names only — confirm real BuddyTime copy from the live app before shipping locators.
+
+**At a glance:** (1) Role-first locators. (2) Web-first waiting only. (3) POMs = actions, no asserts. (4) Setup-project auth + `storageState`. (5) Unique, self-cleaning data. (6) One tag per `test()`. (7) Factories, enums, env. (8) API for arrange/teardown. (9) Mock dependencies, not the SUT. (10) Axe + keyboard on key flows. (11) Strict expects; soft/screenshot when needed. (12) Fix flake at the source, not with retries/workers.
+
+## 1. Locators
+
+Prefer locators that mirror what users see and do; reserve test IDs for when nothing user-facing is stable.
+
+✅ **Good**
+
+```typescript
+await page.getByRole('button', { name: 'Save availability' }).click();
+await page.getByLabel('Child nickname').fill(nickname);
+```
+
+❌ **Bad**
+
+```typescript
+await page.locator('//div[@class="btn-primary"]').click();
+await page.locator('#child-nickname-input').fill(nickname);
+```
+
+**Why:** Role- and label-based locators survive layout and styling changes; CSS/XPath ties tests to implementation detail.
+
+## 2. Waiting
+
+Let Playwright auto-wait via assertions; never sleep or snapshot visibility into a boolean assert.
+
+✅ **Good**
+
+```typescript
+await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+await expect.poll(async () => list.count()).toBe(3);
+```
+
+❌ **Bad**
+
+```typescript
+await page.waitForTimeout(2000);
+expect(await row.isVisible()).toBe(true);
+```
+
+**Why:** Fixed delays flake; web-first `expect` retries until the UI is ready or fails with a useful timeout.
+
+## 3. Page Object Model
+
+One class per page or component; expose actions, not expectations.
+
+✅ **Good**
+
+```typescript
+export class AvailabilityPage {
+  constructor(private readonly page: Page) {
+    this.saveButton = page.getByRole('button', { name: 'Save availability' });
+  }
+  private readonly saveButton: Locator;
+
+  /** Saves the weekly grid for the current family. */
+  async save(): Promise<void> {
+    await this.saveButton.click();
+  }
+}
+```
+
+❌ **Bad**
+
+```typescript
+async saveAndAssert(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Save availability' }).click();
+  await expect(page.getByText('Saved')).toBeVisible();
+}
+```
+
+**Why:** POMs keep specs readable and reuse flows; assertions belong in tests so failures point at the scenario.
+
+## 4. Auth
+
+Authenticate once per family in the setup project; reuse `storageState` for all app tests.
+
+✅ **Good**
+
+```typescript
+// auth.setup.ts — credentials from process.env only
+await page.getByLabel('Email').fill(process.env.APP_USER_EMAIL!);
+await context.storageState({ path: AUTH_FILE });
+
+// two-family spec
+const alt = await browser.newContext({ storageState: ALT_AUTH_FILE });
+```
+
+❌ **Bad**
+
+```typescript
+test.beforeEach(async ({ page }) => {
+  await page.goto('/login');
+  await page.getByLabel('Email').fill(process.env.APP_USER_EMAIL!);
+});
+```
+
+**Why:** Login per test is slow and brittle; setup + `storageState` matches Playwright’s recommended auth pattern.
+
+## 5. Test data
+
+Create unique entities per test and tear them down so parallel runs and shared envs stay safe.
+
+✅ **Good**
+
+```typescript
+const familyName = `Family-${Date.now()}`;
+const family = await familyFactory.create(request, { name: familyName });
+try {
+  // test body
+} finally {
+  await familyFactory.delete(request, family.id);
+}
+```
+
+❌ **Bad**
+
+```typescript
+test('uses shared playdate', async ({ page }) => {
+  await page.goto('/playdates/12345'); // fixed id from another run
+});
+```
+
+**Why:** Shared or leftover data causes order-dependent failures and collisions in the BuddyTime test environment.
+
+## 6. Tags
+
+Exactly one tag on each `test()`; choose the narrowest suite that owns the scenario.
+
+✅ **Good**
+
+```typescript
+test('shows empty state when no friends', { tag: '@smoke' }, async ({ page }) => {
+  // ...
+});
+```
+
+❌ **Bad**
+
+```typescript
+test.describe('Availability', { tag: '@regression' }, () => {
+  test('grid loads', async ({ page }) => { /* ... */ });
+});
+```
+
+**Why:** Tags drive CI selection; `@destructive` is only for shared global state (run with `--workers=1`), and mutating tests must revert in `afterEach`/`afterAll`.
+
+## 7. Test data sources
+
+Centralize builders, static invalid sets, env secrets, and repeated strings.
+
+✅ **Good**
+
+```typescript
+import { buildChildProfile } from '../test-data/factories/child.factory';
+import { AppRoute } from '../test-data/routes';
+
+await page.goto(AppRoute.Availability);
+const child = buildChildProfile();
+```
+
+❌ **Bad**
+
+```typescript
+await page.goto('https://test.example.app/availability');
+await page.getByLabel('Name').fill('Test Child');
+```
+
+**Why:** Factories and enums keep specs DRY; env vars keep secrets out of source control.
+
+## 8. API
+
+Use `request` for arrange/act/assert on APIs; UI is for what only the UI can validate.
+
+✅ **Good**
+
+```typescript
+const res = await request.post('/api/families', { data: buildFamilyPayload() });
+expect(res.ok()).toBeTruthy();
+await page.goto(AppRoute.Dashboard);
+```
+
+❌ **Bad**
+
+```typescript
+await page.goto('/onboarding');
+// 12 UI steps to create a family before the assertion under test
+```
+
+**Why:** API setup is faster and stabilizes tests around the behavior you actually care about.
+
+## 9. Network mocking
+
+Simulate failure and edge responses on dependency routes, not the endpoint under test.
+
+✅ **Good**
+
+```typescript
+await page.route('**/api/notifications/**', (route) =>
+  route.fulfill({ status: 503, body: '{}' }),
+);
+await page.getByRole('button', { name: 'Refresh' }).click();
+await expect(page.getByRole('alert')).toContainText('Try again');
+```
+
+❌ **Bad**
+
+```typescript
+await page.route('**/api/availability/**', (route) =>
+  route.fulfill({ json: { slots: [] } }),
+); // endpoint under test
+```
+
+**Why:** Mocking the SUT hides real integration bugs; mock upstream failures to test resilience.
+
+## 10. Accessibility
+
+Automated WCAG scans plus keyboard paths; role locators double as name checks.
+
+✅ **Good**
+
+```typescript
+await expect(page.getByRole('main')).toBeVisible();
+await page.keyboard.press('Tab');
+await expect(page.getByRole('button', { name: 'Get started' })).toBeFocused();
+const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+expect(results.violations).toEqual([]);
+```
+
+❌ **Bad**
+
+```typescript
+await page.click('.hero-cta'); // no role, no keyboard check, no axe
+```
+
+**Why:** BuddyTime serves families; accessible names and keyboard flows catch regressions unit tests miss.
+
+## 11. Assertions
+
+Default to strict web-first checks; use soft asserts and screenshots deliberately.
+
+✅ **Good**
+
+```typescript
+await expect(page.getByRole('status')).toHaveText('Invite sent');
+await expect.soft(card).toHaveScreenshot({ mask: [page.locator('[data-dynamic-date]')] });
+```
+
+❌ **Bad**
+
+```typescript
+const text = await page.locator('.status').textContent();
+expect(text).toContain('sent');
+// expect removed because flaky
+```
+
+**Why:** Locator-based expects retry; weakening or deleting assertions hides product bugs.
+
+## 12. Anti-flake
+
+Fix root causes — isolation, clocks, locale — instead of cranking retries or serial workers.
+
+✅ **Good**
+
+```typescript
+await page.clock.install({ time: new Date('2026-09-15T10:00:00-04:00') });
+// playwright.config: locale en-CA, timezoneId America/Toronto, retries only in CI
+```
+
+❌ **Bad**
+
+```typescript
+test.describe.configure({ retries: 5 });
+// or workers: 1 to "fix" shared state without cleanup
+```
+
+**Why:** Retries and single-worker masks data leaks; pinned time and locale match BuddyTime’s Canadian scheduling context.
+
+## Refusals (hard stops)
+
+Never weaken or delete an assertion to pass; never heal a real bug; never replace a role locator with CSS/XPath; never use `waitForTimeout`, a hardcoded credential, or the `any` type. Each one is a conflict the agent raises, not a preference it can be talked out of.
