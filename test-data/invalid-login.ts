@@ -15,6 +15,19 @@ export const invalidLoginInputs = {
     email: '',
     password: '',
   } satisfies LoginCredentials,
+  /** E1: malformed address — client validation; not in Jira AC text. */
+  malformedEmail: {
+    email: 'not-an-email',
+    password: 'AnyPassword1!',
+  } satisfies LoginCredentials,
+  emailOnly: {
+    email: process.env.APP_USER_EMAIL ?? '',
+    password: '',
+  } satisfies LoginCredentials,
+  passwordOnly: {
+    email: '',
+    password: 'AnyPassword1!',
+  } satisfies LoginCredentials,
 } as const;
 
 /**

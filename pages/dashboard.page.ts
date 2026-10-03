@@ -16,9 +16,11 @@ export class DashboardPage {
   readonly inviteFamilyButton: Locator;
   readonly inviteCoParentButton: Locator;
   readonly enablePushRemindersButton: Locator;
+  readonly dashboardBanner: Locator;
 
   constructor(private readonly page: Page) {
     this.header = new HeaderComponent(page);
+    this.dashboardBanner = page.getByRole('banner').filter({ hasText: 'Dashboard' });
     this.addChildForm = new AddChildFormComponent(page);
     this.inviteLinkPanel = new InviteLinkPanelComponent(page);
     this.greetingHeading = page.getByRole('heading', { level: 2 });

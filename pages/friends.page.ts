@@ -11,9 +11,11 @@ export class FriendsPage {
   readonly inviteLinkPanel: InviteLinkPanelComponent;
   readonly inviteFamilyButton: Locator;
   readonly exploreCommunitiesLink: Locator;
+  readonly friendsBanner: Locator;
 
   constructor(private readonly page: Page) {
     this.header = new HeaderComponent(page);
+    this.friendsBanner = page.getByRole('banner').filter({ hasText: 'Friends' });
     this.inviteLinkPanel = new InviteLinkPanelComponent(page);
     this.inviteFamilyButton = page.getByRole('button', { name: '+ Invite a family' });
     this.exploreCommunitiesLink = page.getByRole('link', { name: 'Explore Communities' });
