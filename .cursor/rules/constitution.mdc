@@ -9,39 +9,39 @@ Non-negotiables for every task. Details and examples: `playwright-conventions.md
 
 ## MUST
 
-| Rule | Notes |
-|------|--------|
-| Role-based locators | `getByRole` → `getByLabel` → `getByText`; `getByTestId` only when nothing user-facing fits |
-| Web-first assertions | `expect(locator)…`; never snapshot booleans (`isVisible()`, `textContent()`) |
-| storageState auth | Log in once per family in the setup project; credentials from `process.env` |
-| Unique, self-cleaning data | `Date.now()` or a factory per test; API teardown |
-| One tag per test | Exactly one of `@smoke` `@sanity` `@regression` `@api` `@e2e` `@destructive` on each `test()`; never on `describe()` |
+| Rule                       | Notes                                                                                                                |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Role-based locators        | `getByRole` → `getByLabel` → `getByText`; `getByTestId` only when nothing user-facing fits                           |
+| Web-first assertions       | `expect(locator)…`; never snapshot booleans (`isVisible()`, `textContent()`)                                         |
+| storageState auth          | Log in once per family in the setup project; credentials from `process.env`                                          |
+| Unique, self-cleaning data | `Date.now()` or a factory per test; API teardown                                                                     |
+| One tag per test           | Exactly one of `@smoke` `@sanity` `@regression` `@api` `@e2e` `@destructive` on each `test()`; never on `describe()` |
 
 ## SHOULD
 
-| Practice | Notes |
-|----------|--------|
-| Faker factories | Shared builders for names, emails, payloads — not inline magic strings |
-| Enums for repeated strings | Roles, routes, labels used in 2+ places |
-| JSDoc on POM action methods | Brief `@param` / return on user-facing flows in `pages/` |
+| Practice                     | Notes                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| Faker factories              | Shared builders for names, emails, payloads — not inline magic strings                |
+| Enums for repeated strings   | Roles, routes, labels used in 2+ places                                               |
+| JSDoc on POM action methods  | Brief `@param` / return on user-facing flows in `pages/`                              |
 | Composition over inheritance | `HeaderComponent` held by each page (e.g. `LoginPage.header`); not classic `BasePage` |
 
 ## WON'T
 
-| Forbidden | Why |
-|-----------|-----|
-| XPath | Brittle, not user-facing |
-| `waitForTimeout` | Guesses duration; use web-first `expect` |
-| Hardcoded secrets | Use `process.env`; auth files are git-ignored |
-| The `any` type | Defeats TypeScript safety in fixtures and POMs |
-| Weakened assertions | No deleting, softening, or commenting out `expect()` to go green |
-| Healing a real bug | Triage first; drift → self-heal; product defect → bug-reporter |
-| Tags on `describe()` | Tags belong on individual `test()` blocks only |
+| Forbidden            | Why                                                                                    |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| XPath                | Brittle, not user-facing                                                               |
+| `waitForTimeout`     | Guesses duration; use web-first `expect`                                               |
+| Hardcoded secrets    | Use `process.env`; auth files are git-ignored                                          |
+| The `any` type       | Defeats TypeScript safety in fixtures and POMs                                         |
+| Weakened assertions  | No deleting, softening, or commenting out `expect()` to go green                       |
+| Healing a real bug   | Triage first; drift → self-heal; product defect → bug-reporter                         |
+| Tags on `describe()` | Tags belong on individual `test()` blocks only                                         |
 | BasePage inheritance | e.g. `LoginPage extends BasePage` — subclasses inherit header; use composition instead |
 
 ## Index
 
-**Skills** (`.agents/skills/`): _updated as each artifact is added._
+**Skills** (`.cursor/skills/`): `api-cleanup`, `ci-failure-triage`, `eval-report`, `explore-and-generate`, `exploratory-charter`, `jira-bug-reporter`, `jira-ticket-analyzer`, `pom-conventions`, `self-heal`, `test-data-reset`
 
 **Agents** (`.cursor/agents/`): _updated as each artifact is added._
 

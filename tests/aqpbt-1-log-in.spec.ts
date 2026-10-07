@@ -22,6 +22,15 @@ const forgotPasswordUrlPattern = new RegExp(`${AppRoute.ForgotPassword}(\\?.*)?$
 test.describe('AQPBT-1 Log in', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
+  test('log-in page shows welcome heading', { tag: '@smoke' }, async ({ page }) => {
+    const loginPage = new LoginPage(page);
+
+    await loginPage.goto();
+
+    await expect(page).toHaveURL(loginUrlPattern);
+    await expect(loginPage.welcomeHeading).toBeVisible();
+  });
+
   test('successful sign-in lands on Dashboard', { tag: '@smoke' }, async ({ page }) => {
     const loginPage = new LoginPage(page);
     const credentials = buildFamilyALoginCredentials();
