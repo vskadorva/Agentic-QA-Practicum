@@ -27,4 +27,9 @@ export class DeleteAccountFormComponent {
   async fillPassword(password: string): Promise<void> {
     await this.passwordInput.fill(password);
   }
+
+  /** Clicks Delete forever to permanently remove the signed-in account. */
+  async deleteForever(): Promise<void> {
+    await this.deleteForeverButton.click();
+  }
 }
