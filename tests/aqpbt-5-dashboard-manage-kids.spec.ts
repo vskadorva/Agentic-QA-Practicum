@@ -257,7 +257,7 @@ test.describe('AQPBT-5 Dashboard — manage kids', () => {
 
   test(
     'Add child with required fields empty focuses Birth year and does not add a row (AC5)',
-    { tag: '@sanity' },
+    { tag: '@regression' },
     async ({ page }) => {
       const me = await fetchFamilyDashboardContext();
       const dashboard = new DashboardPage(page);
