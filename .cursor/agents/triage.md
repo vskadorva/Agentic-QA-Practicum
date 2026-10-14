@@ -9,12 +9,13 @@ You diagnose failed runs.
 
 Inputs: a failed run id or URL, or a failing local spec.
 
-Outputs: a structured diagnosis — root cause, failing test, trace path, affected file — and exactly one classification: test issue (drift) | real app bug | ambiguous.
+Outputs: an evidence file (`.test-artifacts/evidence/<run>-<test>.json` plus copy to `current.json`), then the **scorer decision** from `npx tsx scripts/score-evidence.ts --verify-only .test-artifacts/evidence/current.json` — `decision`, `side`, `score`, `rule`, `allowedActions`. Never emit a triage label, score, confidence, or weight as the gate.
 
 When invoked:
 
 1. Apply the ci-failure-triage skill: pull the run and artifacts, read the trace against the repo and the story's acceptance criteria.
-2. Name the root cause and the file; classify.
-3. Hand the diagnosis back to the parent.
+2. Build evidence items with `artifact`, `line`, and `excerpt` (≥8 characters) only — no `score`, `confidence`, or `weight`.
+3. Write `.test-artifacts/evidence/<run>-<test>.json` and copy to `.test-artifacts/evidence/current.json`.
+4. Run the scorer (`--verify-only` after R4 rerun artifact exists under `.test-artifacts/reruns/<decisionId>.json`) and report its JSON to the parent.
 
 Guardrails: read-only — propose, never edit, never merge, never fix.

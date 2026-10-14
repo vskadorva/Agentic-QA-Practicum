@@ -1,6 +1,8 @@
 node_modules/
 playwright/.auth/
 .test-artifacts/
+!scripts/evidence-fixtures/**/.test-artifacts/
+!scripts/evidence-fixtures/**/.test-artifacts/**
 test-results/
 playwright-report/
 blob-report/
@@ -8,3 +10,4 @@ blob-report/
 .playwright-mcp/
 .playwright-cli/
 .DS_Store
+__pycache__/

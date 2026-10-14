@@ -57,13 +57,14 @@ Drive a QA task to **done** by delegating. The only work you do yourself is read
 
 ## Heal on red
 
-Always **triage** first.
+Always **triage** first (evidence file + scorer on `.test-artifacts/evidence/current.json`). Route on the scorer JSON only — not a chat label or `.test-artifacts/decisions/*.json`.
 
-| Classification | Action |
+| Scorer outcome | Action |
 | -------------- | ------ |
-| Real app bug | **bug-reporter** — never heal |
-| Drift | **self-heal**: re-discover via accessibility snapshot, patch POM only, re-run green with assertions unchanged, repair PR `heal/<desc>`, never merge |
-| Ambiguous | Stop and escalate |
+| `act` + `side: drift` | **self-heal**: re-discover via accessibility snapshot, patch POM only, re-run green with assertions unchanged, repair PR `heal/<desc>`, never merge |
+| `act` + `side: bug` | **bug-reporter** draft — never heal |
+| `escalate` | Show the evidence table (items, verified/missing/contradictions) and **wait** for a human approval file at `.test-artifacts/approvals/<decisionId>.json` before self-heal or Jira filing |
+| `inconclusive` | Stop; list what is missing or contradicting from scorer `missing` / `contradictions` / `rule` |
 
 **Hard stops:** never touch an assertion (guard hooks enforce this); stop if green needs an assertion change or the same locator error persists.
 
@@ -82,4 +83,4 @@ On repeated identical failure: leave PR open; do **not** add the label.
 1. If any `eval-report` trigger fired this session, apply **eval-report**, commit refreshed `eval-report.md`; otherwise note `eval: skipped`.
 2. **Single-ticket mode:** plan on disk, spec run reported, PR open (or repair/heal PR), human gate documented; bug filed only after approval.
 3. **Backlog mode:** one PR per processed ticket (or stopped ticket with open PR and no label on hard stop).
-4. **Red-run heal mode:** triage recorded, drift → heal PR open and green locally; bug → draft shown, filed only after approval; ambiguous → escalated, no merge.
+4. **Red-run heal mode:** evidence + scorer recorded; `act`+drift → heal PR open and green locally; `act`+bug → draft shown, filed only after approval; `escalate`/`inconclusive` → escalated or stopped, no merge.

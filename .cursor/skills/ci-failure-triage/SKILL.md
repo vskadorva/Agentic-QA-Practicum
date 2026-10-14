@@ -18,20 +18,20 @@ Diagnose red CI or local Playwright runs without merging fixes. Name **where** a
 3. Cross-reference the spec, the page object, the story's acceptance criteria, and the
    Confluence page. BuddyTime's source isn't in this repo; compare against the
    documented behavior instead.
-4. Classify exactly one: **test issue (drift)** | **real app bug** | **ambiguous**.
-5. Report: root cause, affected file and line, expected/actual, suggested fix, and
-   evidence (trace or screenshot path, run id) — as a PR comment when a PR exists,
-   otherwise to the parent agent.
+4. Build the evidence file (see **Evidence file** below) — items cite real artifacts with `line` and `excerpt`; never put `score`, `confidence`, or `weight` in the file.
+5. Save to `.test-artifacts/evidence/<run>-<test>.json` and copy to `.test-artifacts/evidence/current.json`. Ensure R4: save the Playwright JSON re-run to `.test-artifacts/reruns/<decisionId>.json` (decision id = first 12 hex chars of SHA-256 of the evidence file).
+6. Run `npx tsx scripts/score-evidence.ts --verify-only .test-artifacts/evidence/current.json` and report the scorer output (`decision`, `side`, `score`, `rule`, `allowedActions`, `missing`, `contradictions`) — as a PR comment when a PR exists, otherwise to the parent agent. Do not trust a saved decision file or a chat label.
 
-## Classification guide
+## Evidence signals (for items, not for a human label)
 
-| Class | Signals |
+| Scorer side / outcome | Signals |
 | ----- | -------- |
-| test issue (drift) | Locator/copy/route changed; expectation no longer matches AC; flake from timing; wrong test data; env/credentials in CI config |
-| real app bug | App behavior contradicts Jira AC or Confluence; reproduces on re-run; POM/spec align with docs |
-| ambiguous | Conflicting docs, cannot repro locally, or missing artifact — state what is needed to decide |
+| drift items (D1–D4) | Locator/copy/route changed; POM drift; snapshot mismatch; probe not unique |
+| bug items (B1–B4) | App behavior contradicts Jira AC or Confluence; server error with AC-aligned spec |
+| inconclusive (rule 3) | Re-run **passed** — flaky, not drift |
+| inconclusive (other) | Missing required items, drift+bug contradiction, or score below threshold |
 
-**Real app bug** → hand off to [jira-bug-reporter](../jira-bug-reporter/SKILL.md) after diagnosis (do not file Jira from this skill without that workflow's approval gate).
+**`decision: act` + `side: bug`** → hand off to [jira-bug-reporter](../jira-bug-reporter/SKILL.md) only through gate-approved filing (do not file Jira from this skill).
 
 ## Report template
 
@@ -41,7 +41,7 @@ Post this (markdown) on the PR or return to the parent agent:
 ## CI triage — <workflow or job name>
 
 **Run:** `<github run id or "local">`  
-**Classification:** test issue (drift) | real app bug | ambiguous
+**Scorer:** `decision=<act|escalate|inconclusive>` `side=<drift|bug|null>` `score=<n>` `rule=<rule-*>` `allowedActions=[…]`
 
 ### Failing test
 `<spec path>` — `<test title>`
@@ -66,6 +66,25 @@ Post this (markdown) on the PR or return to the parent agent:
 - Story: AQPBT-N (if known)
 - Confluence: … (if linked on story)
 ```
+
+## Evidence file shape
+
+```json
+{
+  "test": { "file": "tests/example.spec.ts", "title": "example test title" },
+  "items": [
+    {
+      "id": "R1",
+      "kind": "failure",
+      "artifact": "test-results/.../error-context.md",
+      "line": 12,
+      "excerpt": "at least eight characters from that line"
+    }
+  ]
+}
+```
+
+Never include `score`, `confidence`, or `weight`. Required ids and rubric weights are defined in `config/evidence-rubric.json`.
 
 ## Rules
 

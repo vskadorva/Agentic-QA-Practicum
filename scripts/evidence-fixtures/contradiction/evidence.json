@@ -1,0 +1,47 @@
+{
+  "test": { "file": "tests/a.spec.ts", "title": "dashboard widget" },
+  "items": [
+    {
+      "id": "R1",
+      "kind": "failure",
+      "artifact": "logs/failure.log",
+      "line": 1,
+      "excerpt": "Error: Expected widget to be visible"
+    },
+    {
+      "id": "R2",
+      "kind": "test_location",
+      "artifact": "tests/a.spec.ts",
+      "line": 2,
+      "excerpt": "test('dashboard widget'"
+    },
+    {
+      "id": "R3",
+      "kind": "pom_location",
+      "artifact": "pages/dash.page.ts",
+      "line": 2,
+      "excerpt": "getByRole('button'"
+    },
+    {
+      "id": "R4",
+      "kind": "rerun",
+      "artifact": ".test-artifacts/reruns/placeholder.json",
+      "line": 1,
+      "excerpt": "rerun-placeholder"
+    },
+    {
+      "id": "D1",
+      "kind": "snapshot_mismatch",
+      "artifact": "evidence/d1.txt",
+      "line": 1,
+      "excerpt": "Snapshot mismatch"
+    },
+    {
+      "id": "B2",
+      "kind": "server_error",
+      "artifact": "evidence/b2.txt",
+      "line": 1,
+      "excerpt": "Server error"
+    }
+  ]
+}

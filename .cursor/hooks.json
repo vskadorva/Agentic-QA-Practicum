@@ -1,6 +1,31 @@
 {
   "version": 1,
   "hooks": {
+    "preToolUse": [
+      {
+        "command": "python3 .cursor/hooks/guard-approvals.py",
+        "matcher": "Write",
+        "failClosed": true
+      },
+      {
+        "command": "python3 .cursor/hooks/guard-heal-gate.py",
+        "matcher": "Write",
+        "failClosed": true
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "python3 .cursor/hooks/guard-pr-gate.py",
+        "matcher": "gh\\s+pr\\s+create",
+        "failClosed": true
+      }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": "python3 .cursor/hooks/guard-jira-bug-gate.py",
+        "failClosed": true
+      }
+    ],
     "afterFileEdit": [
       {
         "command": ".cursor/hooks/guard-test-assertions.sh",

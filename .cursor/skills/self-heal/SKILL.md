@@ -1,6 +1,6 @@
 ---
 name: self-heal
-description: Repairs drifted Playwright locators after a UI change — patch the POM, re-run unchanged assertions, open a PR. Use when the build is red because a locator broke, fix the drifted selector, the test broke after a UI change, or heal the suite. Use ONLY after triage classifies the red run as a test issue (drift/locator drift); NEVER for a real app bug — route those to bug-reporter instead.
+description: Repairs drifted Playwright locators after a UI change — patch the POM, re-run unchanged assertions, open a PR. Use when the build is red because a locator broke, fix the drifted selector, the test broke after a UI change, or heal the suite. Use ONLY when scripts/score-evidence.ts reports decision act with side drift (or escalate with a human approval file under .test-artifacts/approvals/); NEVER for act+bug — route those to bug-reporter instead.
 ---
 
 # Self-heal (locator drift)
@@ -9,8 +9,9 @@ Fix **one** broken locator in `pages/` when [ci-failure-triage](../ci-failure-tr
 
 ## Prerequisite
 
-- A completed triage diagnosis classified **test issue (drift)**. If it is a
-  real app bug, missing, or ambiguous → stop and route to [jira-bug-reporter](../jira-bug-reporter/SKILL.md).
+- Re-run the scorer: `npx tsx scripts/score-evidence.ts --verify-only .test-artifacts/evidence/current.json`.
+- Proceed only on **`decision: act`** with **`side: drift`**, or **`decision: escalate`** with **`side: drift`** and `.test-artifacts/approvals/<decisionId>.json` present (human-created).
+- Otherwise stop (including `inconclusive` / `act`+`bug`) and route per [qa-orchestrator](../../rules/qa-orchestrator.mdc).
 
 ## Steps
 

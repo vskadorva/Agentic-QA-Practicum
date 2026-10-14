@@ -15,7 +15,7 @@ Turn a failing Playwright run into a reviewed Jira Bug linked to the originating
 4. **Search Jira** project `JIRA_PROJECT_KEY` (from `.env.example` or the user's environment, e.g. `AQPBT`) for a similar open bug before drafting a new one. Use Atlassian MCP `searchJiraIssuesUsingJql` — e.g. open bugs in the project whose summary or description matches the failure symptom, component, or Playwright locator text.
 5. **Draft** the ticket with:
    - **Title** (specific)
-   - **Type:** Bug
+   - **Type:** Bug (`createJiraIssue` field **`issueType`**: `"Bug"` in project `AQPBT`)
    - **Severity**, **Priority**
    - **Steps to reproduce** (numbered, from login, naming which family does what — e.g. Family A / Family B from auth setup, not credentials)
    - **Expected** (from the AC or the Confluence page linked on the story)
@@ -24,18 +24,18 @@ Turn a failing Playwright run into a reviewed Jira Bug linked to the originating
    - **Evidence** (screenshot and trace paths)
    - The exact **Playwright error**
    - **Linked story** (`AQPBT-N`)
-6. **Show the draft to the human.** File it with the Atlassian MCP only after approval, and link it to the originating story (`createJiraIssue` / issue link or parent as the project uses).
+6. **Show the draft to the human.** File with Atlassian MCP `createJiraIssue` only when the scorer allows it (`decision: act`, `side: bug`, or `decision: escalate` with human approval file `.test-artifacts/approvals/<decisionId>.json`) and the human approved the draft.
 
-## Triage before filing
+## Scorer before filing
 
-| Outcome | Action |
+| Scorer outcome | Action |
 | -------- | ------ |
-| Product defect (app wrong vs AC) | Draft bug per workflow |
-| Test drift (selectors, timing, wrong expectation) | Fix or heal the test — do **not** file a Jira bug |
-| Flaky / env / credentials / data setup | Fix automation or env — do **not** file as product bug |
-| Re-run passes with no app change | Investigate flake; do **not** file on a single red without reproduction |
+| `act` + `side: bug` | Draft bug; file after human approves draft (MCP gated) |
+| `act` + `side: drift` | Heal — do **not** file a Jira bug |
+| `inconclusive` (incl. re-run passed / rule 3) | Stop — do **not** file |
+| `escalate` | Draft only until human adds approval JSON and approves draft |
 
-Constitution: triage first; never heal a real bug by weakening assertions.
+Constitution: evidence scorer gates actions; never heal a real bug by weakening assertions.
 
 ## Draft template
 
