@@ -31,7 +31,7 @@ test.describe('AQPBT-1 Log in', () => {
     await expect(loginPage.welcomeHeading).toBeVisible();
   });
 
-  test('successful sign-in lands on Dashboard', { tag: '@smoke' }, async ({ page }) => {
+  test('successful sign-in lands on Dashboard', { tag: '@sanity' }, async ({ page }) => {
     const loginPage = new LoginPage(page);
     const credentials = buildFamilyALoginCredentials();
     const dashboardPage = new DashboardPage(page);

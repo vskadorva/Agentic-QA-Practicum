@@ -16,7 +16,7 @@ export class LoginPage {
     this.welcomeHeading = page.getByRole('heading', { name: 'Welcome back' });
     this.emailInput = page.getByRole('textbox', { name: 'Email' });
     this.passwordInput = page.getByRole('textbox', { name: 'Password' });
-    this.logInButton = page.getByRole('button', { name: 'Login', exact: true });
+    this.logInButton = page.getByRole('button', { name: 'Log in', exact: true });
     this.signUpLink = page.getByRole('link', { name: 'Sign up' });
     this.forgotPasswordLink = page.getByRole('link', { name: 'Forgot password?' });
     this.invalidCredentialsMessage = page.getByText('Invalid email or password');
