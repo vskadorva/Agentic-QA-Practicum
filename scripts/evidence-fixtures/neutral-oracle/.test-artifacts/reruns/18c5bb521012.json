@@ -1,0 +1,24 @@
+{
+  "suites": [
+    {
+      "specs": [
+        {
+          "tests": [
+            {
+              "results": [
+                {
+                  "status": "failed",
+                  "errors": [
+                    {
+                      "message": "Error: Expected widget to be visible in dashboard\n    at Object.<anonymous> (test.spec.ts:10:5)"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

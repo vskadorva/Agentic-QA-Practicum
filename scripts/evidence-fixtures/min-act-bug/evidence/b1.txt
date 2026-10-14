@@ -1,0 +1,1 @@
+AC contradiction: story requires visible widget but UI hides it
