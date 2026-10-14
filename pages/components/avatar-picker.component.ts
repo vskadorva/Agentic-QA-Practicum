@@ -6,15 +6,10 @@ export class AvatarPickerComponent {
   readonly doneButton: Locator;
   readonly genderCombobox: Locator;
 
-  constructor(_page: Page, row: Locator) {
-    this.root = row;
+  constructor(page: Page, childSummary: string) {
+    this.root = page.getByText(childSummary).locator('..').locator('..');
     this.doneButton = this.root.getByRole('button', { name: 'done' });
     this.genderCombobox = this.root.getByRole('combobox');
-  }
-
-  /** Preset avatar icon button inside the expanded editor. */
-  avatarIconButton(name: string): Locator {
-    return this.root.getByRole('button', { name, exact: true });
   }
 
   /** Selects a preset avatar by its accessible name. */
