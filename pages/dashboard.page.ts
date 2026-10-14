@@ -5,6 +5,12 @@ import { AddChildFormComponent } from './components/add-child-form.component';
 import { AvatarPickerComponent } from './components/avatar-picker.component';
 import { HeaderComponent } from './components/header.component';
 import { InviteLinkPanelComponent } from './components/invite-link-panel.component';
+import {
+  ADD_CHILD_INTEREST_CHIP_LABELS,
+  DASHBOARD_AVATAR_ICON_NAMES,
+} from './dashboard.constants';
+
+export { ADD_CHILD_INTEREST_CHIP_LABELS, DASHBOARD_AVATAR_ICON_NAMES };
 
 /** Signed-in home / Dashboard (`/app`). */
 export class DashboardPage {
@@ -35,6 +41,79 @@ export class DashboardPage {
     await this.page.goto(AppRoute.Dashboard);
   }
 
+  /** Family card header area containing the family name and parent display name. */
+  familyBlock(familyName: string): Locator {
+    return this.page.getByText(familyName, { exact: true }).locator('..').locator('..');
+  }
+
+  /** Family name label in the family block. */
+  familyNameLocator(familyName: string): Locator {
+    return this.familyBlock(familyName).getByText(familyName, { exact: true });
+  }
+
+  /** Parent display name shown under the family name. */
+  parentDisplayNameLocator(familyName: string, displayName: string): Locator {
+    return this.familyBlock(familyName).getByText(displayName, { exact: true });
+  }
+
+  /** Numeric stat paired with the “My Kids” label. */
+  myKidsCountLocator(): Locator {
+    return this.page.getByText('My Kids', { exact: true }).locator('..').getByText(/^\d+$/, { exact: true });
+  }
+
+  /** Reads the My Kids stat as a number. */
+  async getMyKidsCount(): Promise<number> {
+    const text = await this.myKidsCountLocator().innerText();
+    return Number.parseInt(text, 10);
+  }
+
+  /** Count of child rows (remove buttons) in the family block. */
+  async getChildRowCount(familyName: string): Promise<number> {
+    return this.familyBlock(familyName).getByRole('button', { name: 'remove' }).count();
+  }
+
+  /** One child row in the family block, located by summary line text. */
+  childRowBySummary(familyName: string, summaryLine: string): Locator {
+    return this.familyBlock(familyName)
+      .locator('div')
+      .filter({ has: this.page.getByText(summaryLine, { exact: true }) })
+      .filter({ has: this.page.getByRole('button', { name: 'remove' }) })
+      .first();
+  }
+
+  /** Summary line text for a child row (e.g. `Mia, 7 · Girl`). */
+  childSummaryLocator(familyName: string, summaryLine: string): Locator {
+    return this.childRowBySummary(familyName, summaryLine).getByText(summaryLine, { exact: true });
+  }
+
+  /** Interest tag elements for a child row. */
+  childInterestTags(familyName: string, summaryLine: string): Locator {
+    const summary = this.childRowBySummary(familyName, summaryLine).getByText(summaryLine, { exact: true });
+    return summary.locator('..').locator('> *').filter({ hasNotText: summaryLine });
+  }
+
+  /** Opens avatar editing for a child on the family card. */
+  async openAvatarPickerForChild(familyName: string, summaryLine: string): Promise<AvatarPickerComponent> {
+    const row = this.childRowBySummary(familyName, summaryLine);
+    await row.getByRole('button', { name: 'Change avatar' }).click();
+    return new AvatarPickerComponent(this.page, row);
+  }
+
+  /** Removes a child row via its remove control. */
+  async removeChild(familyName: string, summaryLine: string): Promise<void> {
+    await this.childRowBySummary(familyName, summaryLine).getByRole('button', { name: 'remove' }).click();
+  }
+
+  /** Avatar icon button in the add-child form (scoped away from open editors). */
+  addChildAvatarIconButton(iconName: string): Locator {
+    return this.addChildForm.formRoot.getByRole('button', { name: iconName, exact: true });
+  }
+
+  /** Interest shortcut chip in the add-child form. */
+  addChildInterestChip(label: string): Locator {
+    return this.addChildForm.formRoot.getByRole('button', { name: label, exact: true });
+  }
+
   /** Expands the circle invite link panel. */
   async openInviteFamily(): Promise<void> {
     await this.inviteFamilyButton.click();
@@ -43,11 +122,5 @@ export class DashboardPage {
   /** Expands the co-parent invite link panel. */
   async openInviteCoParent(): Promise<void> {
     await this.inviteCoParentButton.click();
-  }
-
-  /** Opens avatar editing for a child on the family card. */
-  async openAvatarPickerForChild(childSummary: string): Promise<AvatarPickerComponent> {
-    await this.page.getByText(childSummary).locator('..').getByRole('button', { name: 'Change avatar' }).click();
-    return new AvatarPickerComponent(this.page, childSummary);
   }
 }
