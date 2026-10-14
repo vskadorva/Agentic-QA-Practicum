@@ -10,3 +10,4 @@ blob-report/
 .playwright-mcp/
 .playwright-cli/
 .DS_Store
+__pycache__/
