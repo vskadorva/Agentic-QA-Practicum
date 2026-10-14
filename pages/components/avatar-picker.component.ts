@@ -6,15 +6,25 @@ export class AvatarPickerComponent {
   readonly doneButton: Locator;
   readonly genderCombobox: Locator;
 
-  constructor(page: Page, childSummary: string) {
-    this.root = page.getByText(childSummary).locator('..').locator('..');
-    this.doneButton = this.root.getByRole('button', { name: 'done' });
+  /** Targets the open inline editor (call after **Change avatar**). */
+  constructor(page: Page) {
+    this.doneButton = page.getByRole('button', { name: 'done' });
+    this.root = page
+      .locator('div')
+      .filter({ has: this.doneButton })
+      .filter({ has: page.getByRole('button', { name: 'Fox', exact: true }) })
+      .last();
     this.genderCombobox = this.root.getByRole('combobox');
+  }
+
+  /** Preset avatar icon button inside the expanded editor. */
+  avatarIconButton(name: string): Locator {
+    return this.root.getByRole('button', { name, exact: true });
   }
 
   /** Selects a preset avatar by its accessible name. */
   async selectAvatar(name: string): Promise<void> {
-    await this.root.getByRole('button', { name, exact: true }).click();
+    await this.avatarIconButton(name).click();
   }
 
   /** Closes the picker (persists current selection). */
