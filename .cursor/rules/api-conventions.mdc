@@ -1,0 +1,125 @@
+---
+description: Conventions for API tests in api/ — sources of truth, safe auth, a success and an intentional error test per endpoint, evidence labels.
+globs: api/**
+alwaysApply: false
+---
+
+# API test conventions
+
+BuddyTime API specs live under `api/` and follow `api/CATALOG.md`. Shared helpers: `api/fixtures.ts`, `api/catalog-assertions.ts`, `api/catalog-constants.ts`.
+
+## 1. Sources of truth
+
+Document the spec or approved doc; add or update a **catalog row** after you observe traffic. Anything else is an assumption — list it under **Not yet tested** in `api/CATALOG.md`. Rows marked **executed** → characterization tests (pin today’s behavior). A formal spec you were given → contract tests.
+
+✅ **Good** — catalog row `executed`; spec asserts fields from that row via shared assertions:
+
+```typescript
+// me.api.spec.ts — pairs with CATALOG.md GET /api/v1/me (evidence: executed)
+test('GET /api/v1/me returns profile JSON', { tag: '@api' }, async ({ apiMain }) => {
+  const response = await apiMain.get('/api/v1/me');
+  expect(response.status()).toBe(200);
+  assertMeBody(await response.json());
+});
+```
+
+❌ **Bad** — catalog marks **inspected only** / not safe; no observed request — do not add a spec until executed and undo is known:
+
+```markdown
+<!-- api/CATALOG.md -->
+| POST | `/api/v1/events` | … | `201` + `{ id }` per test helpers | no (create without undo) | inspected only |
+```
+
+## 2. Requests
+
+`baseURL` comes from Playwright config (`process.env.APP_URL`). Authenticated clients: **`apiMain`**, **`apiAlt`**, **`apiAnonymous`** from `api/fixtures.ts` only (they call `support/api-client.ts`). No Bearer token, origin URL, or resource id literals in specs.
+
+✅ **Good** — relative path + fixture; `{id}` from a prior list response:
+
+```typescript
+// communities.api.spec.ts
+const detailResponse = await apiMain.get(`/api/v1/communities/${encodeURIComponent(first.id)}`);
+```
+
+❌ **Bad** — origin belongs in env + fixtures, not in spec strings (catalog may record where capture ran):
+
+```markdown
+<!-- api/CATALOG.md (capture note — not a request URL for specs) -->
+Captured via Playwright MCP against `https://test.buddytime.ca` while signed in…
+```
+
+## 3. Two tests per endpoint
+
+Per route: one **success** test (status, JSON type, expected fields via `catalog-assertions`) and one **intentional error** test that changes exactly one thing (e.g. drop auth). On errors, assert status (and body shape only when observed); on success, assert catalog fields — not unbounded dumps of sensitive data.
+
+✅ **Good** — paired success + missing token (`UNAUTHENTICATED_GET_STATUS` from catalog):
+
+```typescript
+// availability.api.spec.ts
+test('GET /api/v1/availability returns rules and exceptions', { tag: '@api' }, async ({ apiMain }) => { … });
+test('GET /api/v1/availability without token is rejected', { tag: '@api' }, async ({ apiAnonymous }) => {
+  expect((await apiAnonymous.get('/api/v1/availability')).status()).toBe(UNAUTHENTICATED_GET_STATUS);
+});
+```
+
+❌ **Bad** — write path with success only; no separate intentional error test for the same endpoint:
+
+```typescript
+// children.api.spec.ts — POST /api/v1/children: one happy path, no "without token" / invalid body sibling
+test('POST /api/v1/children create appears on GET /api/v1/me and DELETE removes', { tag: '@api' }, async ({ apiMain }) => { … });
+```
+
+## 4. Writes
+
+Only when undo is **documented** in the catalog (e.g. DELETE) or **observed**. Call **`trackRecord`** immediately after create so global cleanup deletes the row even if the test fails later.
+
+✅ **Good** — catalog: POST children paired with DELETE; track right after 201:
+
+```typescript
+// children.api.spec.ts
+trackRecord({ type: 'child', id: created.id, owner: 'main' });
+```
+
+❌ **Bad** — catalog says no safe test without undo; do not POST until catalog allows it:
+
+```markdown
+<!-- api/CATALOG.md -->
+| POST | `/api/v1/events` | … | no (create without undo in this pass) | inspected only |
+```
+
+## 5. Tags
+
+Exactly **one** tag per `test()`: **`@api`**. Never on `describe()`.
+
+✅ **Good:**
+
+```typescript
+test('GET /api/v1/connections returns circle JSON', { tag: '@api' }, async ({ apiMain }) => { … });
+```
+
+❌ **Bad** — same flow as `children.api.spec.ts` but without the `{ tag: '@api' }` option the repo always uses:
+
+```typescript
+test(
+  'POST /api/v1/children create appears on GET /api/v1/me and DELETE removes',
+  async ({ apiMain }) => {
+```
+
+## 6. Evidence
+
+Label every claim **executed**, **inspected only**, or **not yet tested** (catalog `evidence` column and § Not yet tested). Status codes and field lists copied from a spec PDF, chat, or agent guess are **not** evidence until observed.
+
+✅ **Good** — constant tied to catalog probe table:
+
+```typescript
+// catalog-constants.ts
+/** Anonymous GET status recorded in api/CATALOG.md (§ Unauthenticated GET responses). */
+export const UNAUTHENTICATED_GET_STATUS = 401;
+```
+
+❌ **Bad** — catalog row relies on assumption, not execution:
+
+```markdown
+<!-- api/CATALOG.md -->
+| GET | `/api/v1/playdates/{id}/ics` | … | Bearer JWT (assumed same as other API calls) | — | not observed | inspected only |
+```

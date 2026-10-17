@@ -207,12 +207,12 @@ export function assertEventItem(item: unknown): void {
   expectStringField(item, 'id');
   expectStringField(item, 'kind');
   expectStringField(item, 'title');
-  expectStringField(item, 'childId');
-  expectStringField(item, 'childName');
+  expectNullableStringField(item, 'childId');
+  expectNullableStringField(item, 'childName');
   expectStringField(item, 'startsAt');
   expectNullableStringField(item, 'endsAt');
-  expectStringField(item, 'venueText');
-  expectStringField(item, 'details');
+  expectNullableStringField(item, 'venueText');
+  expectNullableStringField(item, 'details');
   expectStringField(item, 'cardKey');
   expectStringField(item, 'status');
   expectNullableStringField(item, 'communityId');
