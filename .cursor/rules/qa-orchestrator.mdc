@@ -34,7 +34,7 @@ Drive a QA task to **done** by delegating. The only work you do yourself is read
 - Atlassian MCP (Jira and Confluence)
 - GitHub MCP or `gh`
 - Terminal (`npx playwright test`)
-- Subagents: **test-writer**, **triage**, **bug-reporter**
+- Subagents: **api-test-writer**, **test-writer**, **triage**, **bug-reporter**
 
 ## Skills
 
@@ -45,13 +45,19 @@ Drive a QA task to **done** by delegating. The only work you do yourself is read
 | `ci-failure-triage` | Via **triage** on red runs |
 | `self-heal` | Drift only |
 | `jira-bug-reporter` | Via **bug-reporter** |
+| `api-discovery` | Undocumented API → update `api/CATALOG.md` |
+| `api-contract-tests` | Plan API coverage from spec or catalog → before **api-test-writer** |
 | `api-cleanup` | Review/cleanup in generated tests |
 | `pom-conventions` | POM alignment |
 | `eval-report` | **Mandatory before Done** when any trigger fired this session |
 
 ## Routing
 
-**With ticket:** analyze → plan saved to `features/<key>.feature.md` → **test-writer** → run → if red, **Heal on red**.
+- **API endpoint** (no page in acceptance criteria): `api-contract-tests` plan from the spec or the catalog → **api-test-writer** → run the **api** project (`npx playwright test --project=api`); if red, **Heal on red**.
+- **Page flow:** plan saved to `features/<key>.feature.md` → **test-writer** → run → if red, **Heal on red**.
+- **Both:** API path first, then page path.
+
+**With ticket:** `jira-ticket-analyzer` → route as above.
 
 **No ticket:** `explore-and-generate` → plan saved to `features/explore-<slug>.feature.md` → **test-writer**.
 
@@ -68,11 +74,13 @@ Always **triage** first (evidence file + scorer on `.test-artifacts/evidence/cur
 
 **Hard stops:** never touch an assertion (guard hooks enforce this); stop if green needs an assertion change or the same locator error persists.
 
+P36's evidence scorer applies to **API** failures too. An API failure has no page object to heal, so the drift side cannot reach `act` — a changed status or response field is triage evidence for a contract update or a bug, never **self-heal**.
+
 ## Backlog mode
 
 The outer runner (Cursor Automation, headless `agent -p`, or local batch) queries Jira project `JIRA_PROJECT_KEY` (`AQPBT`) for status **In QA** without label `tests-generated` and passes **at most one** ticket per run. Empty queue → no run.
 
-Per ticket: analyze → **test-writer** → run → heal on red.
+Per ticket: analyze → route per **Routing** → heal on red.
 
 **Output:** one PR per ticket, ticket linked in PR body, label `tests-generated` on the ticket. Never merge, transition, or close.
 

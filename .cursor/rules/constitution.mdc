@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Playwright constitution
 
-Non-negotiables for every task. Details and examples: `playwright-conventions.mdc` (tests) and `qa-orchestrator.mdc` (ticket/CI workflow).
+Non-negotiables for every task. Details and examples: `playwright-conventions.mdc` (tests), `api-conventions.mdc` (api), and `qa-orchestrator.mdc` (ticket/CI workflow).
 
 ## MUST
 
@@ -41,9 +41,25 @@ Non-negotiables for every task. Details and examples: `playwright-conventions.md
 
 ## Index
 
-**Skills** (`.cursor/skills/`): `api-cleanup` — teardown test data; `ci-failure-triage` — classify red CI; `eval-report` — refresh suite metrics; `explore-and-generate` — ticket-less gap discovery; `exploratory-charter` — session charter format; `jira-bug-reporter` — draft Jira bugs; `jira-ticket-analyzer` — AC to Gherkin; `pom-conventions` — POM and locators; `self-heal` — drift locator repair; `test-data-reset` — bulk delete leftovers
+**Rules** (`.cursor/rules/`): `api-conventions.mdc` — API specs under `api/` (catalog, fixtures, paired tests)
 
-**Agents** (`.cursor/agents/`): `bug-reporter` — file confirmed bugs; `test-writer` — plan to Playwright spec; `triage` — classify failures
+**Skills** (`.cursor/skills/`): `api-cleanup` — teardown test data; `api-contract-tests` — API specs from spec or catalog; `api-discovery` — network → `api/CATALOG.md`; `ci-failure-triage` — classify red CI; `eval-report` — refresh suite metrics; `explore-and-generate` — ticket-less gap discovery; `exploratory-charter` — session charter format; `jira-bug-reporter` — draft Jira bugs; `jira-ticket-analyzer` — AC to Gherkin; `pom-conventions` — POM and locators; `self-heal` — drift locator repair; `test-data-reset` — bulk delete leftovers
+
+**Agents** (`.cursor/agents/`): `api-test-writer` — API plan to `api/*.api.spec.ts` + one api-project run; `bug-reporter` — file confirmed bugs; `test-writer` — plan to Playwright spec; `triage` — classify failures
+
+## Gate table
+
+| Constraint | Enforcement |
+| --- | --- |
+| Fewer active `expect(` in `tests/` specs | Hook — `guard-test-assertions` |
+| XPath, `waitForTimeout`, `any`, hardcoded secrets, tag on `describe()`, dropped expects in `tests/` / `pages/` | Hook — `guard-constitution` |
+| POM writes on `heal/*` | Hook — `guard-heal-gate` + scorer |
+| Jira bug create | Hook — `guard-jira-bug-gate` + scorer |
+| `gh pr create` | Hook — `guard-pr-gate` + scorer |
+| Red-run drift vs bug vs escalate (UI or API) | Hook — `score-evidence.ts` |
+| Proposal before non-trivial edit | Prompt |
+| All other MUST / SHOULD / WON'T rows above | Prompt |
+| **api-test-writer:** write only under `api/` | Prompt |
 
 ## Agent governance
 
