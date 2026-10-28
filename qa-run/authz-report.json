@@ -1,0 +1,44 @@
+[
+  {
+    "endpoint": "DELETE /api/v1/children/{id}",
+    "who": "apiAlt (family B on family A child id)",
+    "status": 404,
+    "outcome": "HELD",
+    "evidence": "404 on DELETE; family A GET /api/v1/me still lists child id; family B /me never contained that id."
+  },
+  {
+    "endpoint": "DELETE /api/v1/children/{id}",
+    "who": "apiAnonymous",
+    "status": 401,
+    "outcome": "HELD",
+    "evidence": "401 on DELETE; family A GET /api/v1/me still lists child id."
+  },
+  {
+    "endpoint": "GET /api/v1/communities/{id}",
+    "who": "apiAlt (family B on family A community id)",
+    "status": 404,
+    "outcome": "undocumented",
+    "evidence": "404; no 200 body; catalog does not specify cross-family read status for community detail."
+  },
+  {
+    "endpoint": "GET /api/v1/communities/{id}",
+    "who": "apiAnonymous",
+    "status": 401,
+    "outcome": "HELD",
+    "evidence": "401 matches CATALOG.md unauthenticated GET table for this path pattern."
+  },
+  {
+    "endpoint": "GET /api/v1/playdates/{id}/ics",
+    "who": "apiAlt (family B on family A playdate id)",
+    "status": 404,
+    "outcome": "undocumented",
+    "evidence": "404; catalog lists route as inspected only; no documented cross-family ICS rule."
+  },
+  {
+    "endpoint": "GET /api/v1/playdates/{id}/ics",
+    "who": "apiAnonymous",
+    "status": 401,
+    "outcome": "undocumented",
+    "evidence": "401; ICS path not listed in CATALOG.md unauthenticated GET table."
+  }
+]
