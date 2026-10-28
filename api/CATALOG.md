@@ -37,6 +37,17 @@ Probed without an `Authorization` header (see `api/*.api.spec.ts` and `UNAUTHENT
 | GET | `/api/v1/events` | 401 |
 | GET | `/api/v1/communities/{id}` | 401 |
 
+## Authorization (two families)
+
+Second family uses `playwright/.auth/alt-user.json` (`createApiContextForOwner('alt')` / fixture `apiAlt`). Main family remains `apiMain`. Spec: `api/authorization.api.spec.ts`.
+
+| method | path | actor | status seen | what it proves | evidence |
+| --- | --- | --- | --- | --- | --- |
+| DELETE | `/api/v1/children/{id}` | `apiAlt` (family B) targeting family A's child id | 404 | Child not deleted; family A `GET /api/v1/me` still lists the id; family B `/me` never listed it | executed |
+| DELETE | `/api/v1/children/{id}` | `apiAnonymous` targeting family A's child id | 401 | Child not deleted; family A `/me` still lists the id | executed |
+
+**Not yet tested (authorization):** cross-family or anonymous **write** paths other than `DELETE /api/v1/children/{id}` (playdates, events, availability, profile PATCH, etc.); whether family B receives `403` vs `404` on other routes; invalid or expired JWT on DELETE; error response body shape for these denials.
+
 ## Not yet tested
 
 - Pagination, cursors, or `limit`/`offset` on list endpoints (`connections`, `playdates`, `events`, `communities`, `matches`).
