@@ -77,7 +77,7 @@ jobs:
 
           ## Done (Backlog mode + orchestrator Done)
           - Apply `.cursor/skills/eval-report/SKILL.md`; commit refreshed `eval-report.md` (or note eval skipped only if the skill says so).
-          - Open **one PR** per processed ticket: body must include **Gherkin plan:** `features/<KEY>.feature.md`, test command, Jira key link. Branch name `tests/<key>-<short-slug>`.
+          - Open **one draft PR** per processed ticket (`gh pr create --draft`, or the GitHub MCP with draft: true): body must include **Gherkin plan:** `features/<KEY>.feature.md`, test command, Jira key link. Branch name `tests/<key>-<short-slug>`.
           - If the spec is green, add Jira label `tests-generated` on the ticket. If red on app bug or hard stop, leave PR open and **do not** add the label.
           - Never merge, transition, or close tickets or PRs.
 
