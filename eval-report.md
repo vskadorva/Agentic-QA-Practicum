@@ -1,58 +1,52 @@
 # Eval report
 
-**Generated:** 2026-10-13  
-**Window:** N=30 requested; **21** `playwright.yml` runs exist (2026-10-10T00:39:46Z–2026-10-13T23:59:35Z); PRs #1–#5 through 2026-10-13  
-**Trigger:** manual (README + eval refresh)
+**Generated:** 2026-11-18  
+**Window:** last N=30 `playwright.yml` runs (2026-10-14T00:08:49Z–2026-11-18T16:07:26Z; 19 success, 11 failure); PRs #1–#11 (2026-10-10–2026-10-17) plus the AQPBT-19 generation PR opened this session  
+**Trigger:** generation PR (Backlog mode, AQPBT-19)
 
 ## Summary
 
-
-| Metric                    | Value                 | How measured                                                                                                                           | Interpretation                                                                           |
-| ------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Flake rate                | **insufficient data** | Skill default: flaky count from HTML reports in the last N green runs; only 21 total runs and no systematic artifact pull this refresh | Window and sample size too small to compute a stable rate; do not infer from spot checks |
-| Heal success rate         | **insufficient data** | `gh pr list --state all` — no `heal/`* branches; PR #5 is drift simulation, not a self-heal PR                                         | Denominator 0; metric undefined until heal PRs exist                                     |
-| Generation-gate pass rate | **insufficient data** | Ticket-first PRs #2, #3, #4 add specs; all merged with green CI on their PR runs, but N=3 and no full AC audit in this refresh         | Too few generation PRs for a gate pass rate                                              |
-| Ask vs guess              | **insufficient data** | Qualitative metric needs deliberate review of multiple agent sessions/transcripts                                                      | Not sampled systematically this refresh                                                  |
-
-
-
+| Metric | Value | How measured | Interpretation |
+| ------ | ----- | ------------ | -------------- |
+| Flake rate | **insufficient data** | `gh run view <id> --log` on all 19 passing runs; the custom `support/cleanup-reporter.ts` suppresses Playwright's passed/flaky summary, and no HTML artifacts were pulled | Cannot count retry-passes from logs as configured |
+| Heal success rate | **0/1** (masked regressions: **0**) | `heal/*` PRs: #8 (`heal/login-button`); first CI run 38491977778 = failure; `gh pr diff 8` touches `pages/` and `tests/` (no `expect(` lines changed) | The only heal PR missed both gates (first-CI green, POM-only); single sample |
+| Generation-gate pass rate | **3/5** on CI-green criterion | `gh pr checks` on Jira-keyed spec PRs #2, #3, #4 (pass) and #6, #7 (AQPBT-5, regression + smoke fail); full convention/AC audit not repeated per PR | Earlier ticket PRs gated cleanly; AQPBT-5 merged with red PR checks |
+| Ask vs guess | **no guesses observed (n=1 session)** | Reviewed this session (AQPBT-19): every label, route and heading taken from the Jira AC and confirmed against the live aria tree; no asks were needed | Grounded, but sample too small for a tier |
 
 ## Details
 
-
-
 ### Flake rate
 
-Twenty-one workflow runs are on record (`gh run list --workflow=playwright.yml --limit 30`). Four concluded `failure` (early workflow bring-up and recent drift/login-button runs); seventeen `success`. Playwright is configured with `retries: 2` in CI, so a proper flake rate requires parsing reporter/HTML output across passing runs. That scrape was not performed for this refresh, and the run count is below the skill’s N=30 window. **insufficient data** — no numerator/denominator stated.
-
-Excluded from any future flake math: global teardown cleanup **404** noise (see eval-report skill).
+All 30 runs were attempt 1 at the job level. Playwright `retries: 2` in CI means flakes would only appear in reporter output, but the run logs carry no `N passed` / `N flaky` lines because `support/cleanup-reporter.ts` replaces the default reporter (confirmed locally: the same command prints no summary without `--reporter=list`). **insufficient data** — no numerator/denominator stated. Cleanup **404** lines remain excluded as noise.
 
 ### Heal success rate
 
-Branches observed: `tests/*`, `drift/*`, `ci/*` — none match `heal/*`. No PR diff reviewed under the self-heal rule (POM-only, assertions unchanged). Masked-regression count not applicable. **insufficient data**.
+| PR | Branch | First CI | Files | `expect(` changed |
+| --- | --- | --- | --- | --- |
+| #8 | `heal/login-button` | failure (38491977778); later runs green | `pages/login.page.ts`, `tests/aqpbt-1-log-in.spec.ts`, `tests/aqpbt-5-dashboard-manage-kids.spec.ts` | none |
+
+0/1 pass. No masked regressions (no `expect` removed, weakened, or commented out).
 
 ### Generation-gate pass rate
 
-Candidate PRs (Jira key + `tests/` changes):
+| PR | Ticket | PR checks | Result |
+| --- | --- | --- | --- |
+| #2 | AQPBT-8 | regression pass | pass |
+| #3 | AQPBT-6 | regression pass | pass |
+| #4 | AQPBT-4 | regression pass | pass |
+| #6 | AQPBT-5 | regression fail, smoke fail | fail |
+| #7 | AQPBT-5 | regression fail, smoke fail | fail |
 
-
-| PR  | Ticket  | CI on PR (sample run) | Notes  |
-| --- | ------- | --------------------- | ------ |
-| #2  | AQPBT-8 | success (38011999469) | Merged |
-| #3  | AQPBT-6 | success (38013667848) | Merged |
-| #4  | AQPBT-4 | success (38266029056) | Merged |
-
-
-PR #1 is CI wiring only; PR #5 is drift simulation, not generation. A formal gate pass rate (conventions + AC mapping spot-check per skill) was not executed on this small set. **insufficient data** for a percentage.
+The AQPBT-19 PR from this session is not counted (CI pending at report time); its spec passed 7/7 locally against the live app.
 
 ### Ask vs guess
 
-Prior session notes in the 2026-10-12 report referenced grounded ticket/Confluence use for AQPBT-4/8, but this refresh did not re-review transcripts to a defined sample size. **insufficient data**.
+One session reviewed (this one). The ticket explicitly listed labels and paths; they were checked against the live landing page, `/privacy`, and `/terms` before the plan was written. Confluence was searched and confirmed to have no page for the story. No invented values. Needs ≥3 sessions before assigning a tier.
 
 ## Top reliability risk
 
-Recent **drift/login-button** activity produced failing Playwright runs on push/PR (runs 38487415010, 38487418512, 38487540655). Until triage classifies drift vs product regression and smoke/sanity slices cover the affected flow, CI signal on default triggers may not catch full-suite regressions.
+Flake rate is unmeasurable because the cleanup reporter hides the Playwright summary in CI logs, so retry-masked flakes would go unnoticed.
 
 ## Next action
 
-When heal or generation work closes a session, re-run this skill with artifact download on the last N **passing** runs to populate flake rate, and extend the ask-vs-guess sample to at least three reviewed sessions before assigning a tier.
+Add the `list` (or `json`) reporter alongside `support/cleanup-reporter.ts` in CI, or upload the HTML report as an artifact, then re-run this skill to compute flake rate.
