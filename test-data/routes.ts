@@ -4,6 +4,8 @@ export enum AppRoute {
   Login = '/login',
   SignUp = '/signup',
   ForgotPassword = '/forgot-password',
+  Privacy = '/privacy',
+  Terms = '/terms',
   Dashboard = '/app',
   Calendar = '/calendar',
   Friends = '/friends',

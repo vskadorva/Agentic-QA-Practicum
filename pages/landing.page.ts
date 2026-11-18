@@ -4,12 +4,20 @@ import { AppRoute } from '../test-data/routes';
 
 /** Public marketing landing page. */
 export class LandingPage {
+  readonly brandText: Locator;
+  readonly tagline: Locator;
   readonly getStartedLink: Locator;
   readonly logInLink: Locator;
   readonly privacyLink: Locator;
   readonly termsLink: Locator;
 
   constructor(private readonly page: Page) {
+    const main = page.getByRole('main');
+    this.brandText = main.getByText('BuddyTime', { exact: true });
+    this.tagline = main.getByText(
+      "See when your kids' friends are free — and book a playdate in three taps.",
+      { exact: true },
+    );
     this.getStartedLink = page.getByRole('link', { name: 'Get started' });
     this.logInLink = page.getByRole('link', { name: 'Log in' });
     this.privacyLink = page.getByRole('link', { name: 'Privacy' });
@@ -29,5 +37,15 @@ export class LandingPage {
   /** Navigates to log in via the hero link. */
   async openLogIn(): Promise<void> {
     await this.logInLink.click();
+  }
+
+  /** Navigates to the privacy policy via the public Privacy link. */
+  async openPrivacy(): Promise<void> {
+    await this.privacyLink.click();
+  }
+
+  /** Navigates to the terms of service via the public Terms link. */
+  async openTerms(): Promise<void> {
+    await this.termsLink.click();
   }
 }
